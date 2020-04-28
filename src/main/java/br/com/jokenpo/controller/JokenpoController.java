@@ -25,8 +25,11 @@ import br.com.jokempo.service.PlayerService;
 import br.com.jokenpo.domain.Move;
 import br.com.jokenpo.domain.Player;
 import br.com.jokenpo.exception.BusinessException;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 @RestController
+@Api(value = "Jokenpo")
 public class JokenpoController {
 	@Autowired
 	private PlayerService playerService;
@@ -40,9 +43,11 @@ public class JokenpoController {
 	public List<Player> playersList;
 	public List<Move> moveList;
 	
+	
 	@PostMapping(value = "/player")
-	@ResponseStatus(HttpStatus.CREATED)
-	public Player createPlayer(@Valid @RequestBody Player player) {
+	@ResponseStatus(HttpStatus.CREATED)	
+	@ApiOperation(value = "Criar Jogador")
+	public Player createPlayer(@Valid @RequestBody Player player ) {
 		if (playersList == null) {
 			playersList = new ArrayList<>();
 		}
@@ -50,6 +55,7 @@ public class JokenpoController {
 		return playerService.create(playersList, player);
     }	
 	
+	@ApiOperation(value = "Remover Jogador")
 	@DeleteMapping(value = "/player/{playerId}")
     public ResponseEntity<Void> removePlayer(@PathVariable int playerId) {
         try {
@@ -62,12 +68,14 @@ public class JokenpoController {
         }
     }	
 	
+	@ApiOperation(value = "Listar Jogador")
 	@GetMapping(value = "/player")
 	public List<Player> findPlayerAll() {
 		return playersList;
 		
 	}
 	
+	@ApiOperation(value = "Buscar Jogador por Id")
 	@GetMapping(value = "/player/{playerId}")
 	public ResponseEntity<Player> findPlayerById(@PathVariable int playerId){
 		Player player = playerService.findId(playersList, playerId);
@@ -80,6 +88,7 @@ public class JokenpoController {
 		
 	}
 
+	@ApiOperation(value = "Criar a Jogada do Jogador")
 	@PostMapping(value = "/move")
 	@ResponseStatus(HttpStatus.CREATED)
     public Move createMove(@RequestBody Move move) {		
@@ -94,6 +103,7 @@ public class JokenpoController {
        	return moveService.create(moveList, move);
     }	
 	
+	@ApiOperation(value = "Remover Jogada")
 	@DeleteMapping(value = "/move/{moveId}")
     public ResponseEntity<Void> removeMove(@PathVariable int moveId) {		        
         try {
@@ -106,6 +116,7 @@ public class JokenpoController {
         }
     }	
 	
+	@ApiOperation(value = "Listar Jogada")
 	@GetMapping(value = "/move")
 	public List<Move> findMoveAll() {
 		moveList.stream().forEach(list -> { 
@@ -116,6 +127,7 @@ public class JokenpoController {
 		return moveList;
 	}
 	
+	@ApiOperation(value = "Buscar Jogada por Id")
 	@GetMapping(value = "/move/{moveId}")
 	public ResponseEntity<Move> findMoveById(@PathVariable int moveId){
 		Move move = moveService.findId(moveList, moveId);
@@ -130,8 +142,18 @@ public class JokenpoController {
 		
 	}	
 	
+	@ApiOperation(value = "Jogar")
 	@PutMapping(value = "/game")
 	public ResponseEntity<Map<String, Object>> playGame() {
+				
+		if (playersList.size() < 2) {
+			throw new BusinessException("Cadastrar no Mínimo dois Jogadores!");
+		}
+				
+		if (moveList.size() < playersList.size()) {
+			throw new BusinessException("Exsitem Jogador(es) sem Jogadas!");
+		}
+		
 		Player player = gameService.game(moveList);
 		
 		if (player != null) {
